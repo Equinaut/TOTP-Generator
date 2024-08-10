@@ -1,4 +1,9 @@
 import hashlib
+import time
+import urllib.parse
+
+# Text file where keys are stored in key URI format
+KEY_FILE = "keys.txt"
 
 # Block size and output size for SHA1
 BLOCK_SIZE =  64
@@ -61,3 +66,24 @@ def convert_secret(secret):
     bytes = [int(joined[i: i + 8], base = 2) for i in range(0, len(joined), 8)]
     
     return bytearray(bytes)
+
+if __name__ == "__main__":
+    # Read secrets from text file
+    with open(KEY_FILE) as file:
+        for line in file.readlines():
+            # Parse key URI
+            parsed_uri = urllib.parse.urlparse(line)
+            params = urllib.parse.parse_qs(parsed_uri.query)
+            if "secret" not in params: continue
+            secret = params["secret"][0]
+            digits = int(params["digits"][0]) if "digits" in params else 6
+            period = int(params["period"][0]) if "period" in params else 30
+
+            # Generate the TOTP code with the relevant parameters
+            generated_code = generate_code(
+                key = convert_secret(secret),
+                time = int(time.time()),
+                digits = digits,
+                period = period
+            )
+            print(f"{urllib.parse.unquote(parsed_uri.path)[1:]} - {generated_code}")
