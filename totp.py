@@ -1,6 +1,7 @@
 import hashlib
 import time
 import urllib.parse
+import sys
 
 # Text file where keys are stored in key URI format
 KEY_FILE = "keys.txt"
@@ -68,6 +69,15 @@ def convert_secret(secret):
     return bytearray(bytes)
 
 if __name__ == "__main__":
+    try:
+        if len(sys.argv) > 2 and sys.argv[1] == "-t":
+            t = int(sys.argv[2])
+        else: t = int(time.time())
+    except ValueError:
+        t = int(time.time())
+
+    print(f"TOTP codes valid from {time.ctime(t)}")
+
     # Read secrets from text file
     with open(KEY_FILE) as file:
         for line in file.readlines():
@@ -82,7 +92,7 @@ if __name__ == "__main__":
             # Generate the TOTP code with the relevant parameters
             generated_code = generate_code(
                 key = convert_secret(secret),
-                time = int(time.time()),
+                time = int(t),
                 digits = digits,
                 period = period
             )
